@@ -118,15 +118,23 @@ if (-not (Test-Path $vpy)) {
     Say "[2/4] 运行环境已就绪。" 'Green'
 }
 
-# 3. 装依赖（清华镜像）
+# 3. 装依赖（清华镜像；记录 requirements.txt 哈希，清单有变化才重装）
 $flag = Join-Path $here '.venv\.deps_ok'
-if (-not (Test-Path $flag)) {
-    Say "[3/4] 正在安装依赖（国内镜像，第一次约几分钟，别关窗口）..." 'Yellow'
+$reqPath = Join-Path $here 'requirements.txt'
+$reqHash = (Get-FileHash $reqPath -Algorithm SHA256).Hash
+$installedHash = $null
+if (Test-Path $flag) { $installedHash = (Get-Content $flag -Raw -ErrorAction SilentlyContinue).Trim() }
+if ($installedHash -ne $reqHash) {
+    if ($installedHash) {
+        Say "[3/4] 依赖清单有更新，正在同步安装（几分钟，别关窗口）..." 'Yellow'
+    } else {
+        Say "[3/4] 正在安装依赖（国内镜像，第一次约几分钟，别关窗口）..." 'Yellow'
+    }
     $mirror = 'https://pypi.tuna.tsinghua.edu.cn/simple'
     & $vpy -m pip install --upgrade pip -i $mirror
-    & $vpy -m pip install -r requirements.txt -i $mirror
+    & $vpy -m pip install -r $reqPath -i $mirror
     if ($LASTEXITCODE -ne 0) { Die "依赖安装失败。常见原因：1) 网络不通——重连网络后再双击一次即可；2) Python 版本过低（需 3.9+）——请卸载旧版 Python 或删除本文件夹里的 .venv 后重新双击，脚本会自动装新版。" }
-    New-Item $flag -ItemType File -Force | Out-Null
+    Set-Content -Path $flag -Value $reqHash -Encoding ASCII
     Say "      依赖安装完成。" 'Green'
 } else {
     Say "[3/4] 依赖已安装。" 'Green'

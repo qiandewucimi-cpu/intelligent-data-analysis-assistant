@@ -4,22 +4,14 @@ import json
 from dataclasses import dataclass
 from typing import Any, Literal
 
-from langchain_core.language_models.chat_models import BaseChatModel
-from langchain_core.output_parsers import StrOutputParser
-from langchain_core.prompts import ChatPromptTemplate
-from langchain_openai import ChatOpenAI
 from openai import OpenAI
-
-try:
-    from langchain_community.chat_models import ChatTongyi
-except ImportError:  # pragma: no cover - optional compatibility path
-    ChatTongyi = None
-
 
 ProviderType = Literal["dashscope", "openai_compatible", "zhipu", "deepseek"]
 
-# Providers that speak the OpenAI chat-completions wire format via the OpenAI SDK.
-_OPENAI_SDK_PROVIDERS = {"openai_compatible", "zhipu", "deepseek"}
+# Every supported provider speaks the OpenAI chat-completions wire format
+# (DashScope exposes an OpenAI-compatible endpoint, so no vendor SDK and no
+# LangChain adapter is needed).  One client construction path keeps the
+# dependency tree small and the failure modes uniform.
 
 
 @dataclass(frozen=True)
@@ -39,9 +31,7 @@ class LLMService:
 
     def __init__(self, config: LLMConfig) -> None:
         self.config = config
-        self.parser = StrOutputParser()
-        self.langchain_llm = self._build_langchain_llm(config) if config.provider == "dashscope" else None
-        self.openai_client = self._build_openai_client(config) if config.provider in _OPENAI_SDK_PROVIDERS else None
+        self.client = self._build_client(config)
 
     def generate_pandas_code(
         self,
@@ -143,34 +133,10 @@ class LLMService:
         return self._generate_text(system_prompt, user_prompt)
 
     def _generate_text(self, system_prompt: str, user_prompt: str) -> str:
-        """Routes prompt execution through the selected provider implementation."""
-
-        if self.config.provider == "dashscope":
-            raw = self._generate_text_with_langchain(system_prompt, user_prompt)
-        else:
-            raw = self._generate_text_with_openai_sdk(system_prompt, user_prompt)
-        return _strip_wrapping_code_fence(raw)
-
-    def _generate_text_with_langchain(self, system_prompt: str, user_prompt: str) -> str:
-        """Uses LangChain for the DashScope/Tongyi path."""
-
-        prompt = ChatPromptTemplate.from_messages(
-            [
-                ("system", system_prompt),
-                ("human", user_prompt),
-            ]
-        )
-        chain = prompt | self.langchain_llm | self.parser
-        return chain.invoke({}).strip()
-
-    def _generate_text_with_openai_sdk(self, system_prompt: str, user_prompt: str) -> str:
-        """Uses the official OpenAI SDK to avoid incompatible gateway wrappers."""
-
-        if self.openai_client is None:
-            raise RuntimeError("OpenAI-compatible client was not initialized.")
+        """Runs one prompt pair through the configured provider."""
 
         if self.config.use_responses_api:
-            response = self.openai_client.responses.create(
+            response = self.client.responses.create(
                 model=self.config.model_name,
                 instructions=system_prompt,
                 input=user_prompt,
@@ -178,7 +144,7 @@ class LLMService:
             )
             text = _extract_text_from_responses_api(response)
         else:
-            response = self.openai_client.chat.completions.create(
+            response = self.client.chat.completions.create(
                 model=self.config.model_name,
                 messages=[
                     {"role": "system", "content": system_prompt},
@@ -191,54 +157,15 @@ class LLMService:
         cleaned = (text or "").strip()
         if not cleaned:
             raise RuntimeError("模型返回为空，无法生成结果。")
-        return cleaned
+        return _strip_wrapping_code_fence(cleaned)
 
     @staticmethod
-    def _build_langchain_llm(config: LLMConfig) -> BaseChatModel:
-        """Builds the DashScope/Tongyi model with a compatible fallback."""
-
-        if ChatTongyi is not None:
-            try:
-                return ChatTongyi(
-                    model=config.model_name,
-                    dashscope_api_key=config.api_key,
-                    temperature=config.temperature,
-                )
-            except TypeError:
-                try:
-                    return ChatTongyi(
-                        model_name=config.model_name,
-                        dashscope_api_key=config.api_key,
-                        temperature=config.temperature,
-                    )
-                except Exception:
-                    pass
-            except Exception:
-                pass
-
-        kwargs = {
-            "model": config.model_name,
-            "api_key": config.api_key,
-            "base_url": config.base_url,
-            "temperature": config.temperature,
-        }
-        try:
-            return ChatOpenAI(**kwargs)
-        except TypeError:
-            return ChatOpenAI(
-                model_name=config.model_name,
-                openai_api_key=config.api_key,
-                openai_api_base=config.base_url,
-                temperature=config.temperature,
-            )
-
-    @staticmethod
-    def _build_openai_client(config: LLMConfig) -> OpenAI:
-        """Builds a raw OpenAI SDK client for arbitrary compatible gateways."""
+    def _build_client(config: LLMConfig) -> OpenAI:
+        """Builds one OpenAI SDK client for the selected compatible gateway."""
 
         return OpenAI(
             api_key=config.api_key,
-            base_url=config.base_url,
+            base_url=config.base_url or None,
         )
 
 
@@ -290,7 +217,7 @@ def _extract_text_from_chat_completions(response: Any) -> str:
 
 
 def _extract_text_from_responses_api(response: Any) -> str:
-    """Extracts text from responses API outputs across compatible gateways."""
+    """Extracts text from Responses API outputs across compatible gateways."""
 
     output_text = getattr(response, "output_text", None)
     if isinstance(output_text, str) and output_text.strip():
