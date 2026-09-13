@@ -127,12 +127,41 @@ def _grade_value_close(
     return False, f"结果中未找到期望值 {expected_value:.4f}（允许相对误差 {rel_tol:.2%}）"
 
 
+def _drop_position_columns(frame: pd.DataFrame) -> pd.DataFrame:
+    """Drops columns that are pure row-position markers (a permutation of 0..n-1).
+
+    The engine surfaces a permuted unnamed index as an "index" column while a
+    model answer may avoid it; such columns are presentation artifacts, not
+    data, so grading ignores them on both sides.
+    """
+
+    n = len(frame)
+    if n == 0:
+        return frame
+    keep = []
+    for column in frame.columns:
+        # The engine surfaces a permuted unnamed index as an int column named
+        # "index"; a model answer may avoid it.  Presentation artifact, not
+        # data — drop it on both sides (also covers the 0..n-1 special case).
+        values = pd.to_numeric(frame[column], errors="coerce").dropna()
+        is_position_marker = str(column) == "index" and len(values) == n and (
+            (values % 1 == 0).all()
+        )
+        if is_position_marker:
+            continue
+        keep.append(column)
+    return frame[keep]
+
+
 def _grade_frame_equal(
     result_frame: pd.DataFrame,
     reference_frame: pd.DataFrame,
     sorted_desc: bool,
 ) -> tuple[bool, str]:
     """Passes when the answer's row multiset equals the golden rows (order-insensitive)."""
+
+    result_frame = _drop_position_columns(result_frame)
+    reference_frame = _drop_position_columns(reference_frame)
 
     if result_frame.empty and reference_frame.empty:
         return True, ""
@@ -270,9 +299,9 @@ def run_real(questions: list[dict[str, Any]], df: pd.DataFrame, provider_arg: st
             }
         )
 
-    report = _summarize(records, config)
-    _write_reports(report, records, config)
-    return 0 if report["summary"]["final_ok"] == len(questions) else 1
+    summary = _summarize(records, config)
+    _write_reports(summary, records, config)
+    return 0 if summary["final_ok"] == len(questions) else 1
 
 
 def _summarize(records: list[dict[str, Any]], config) -> dict[str, Any]:
@@ -366,6 +395,9 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--provider", default=None, help="模型服务（默认取 .env 的 LLM_PROVIDER）")
     args = parser.parse_args(argv)
 
+    from dotenv import load_dotenv
+
+    load_dotenv()
     questions = load_questions()
     df = build_eval_frame()
 

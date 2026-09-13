@@ -1,0 +1,229 @@
+{
+  "summary": {
+    "generated_at": "2026-09-13T09:02:57",
+    "provider": "zhipu",
+    "model": "glm-4-flash",
+    "n_questions": 18,
+    "first_pass": 15,
+    "final_ok": 15,
+    "latency_p50_s": 16.39,
+    "latency_p95_s": 27.14,
+    "latency_mean_s": 17.99,
+    "timeouts": 0,
+    "memory_kills": 0,
+    "sandbox_rejects": 0,
+    "convergence": {
+      "1": 15,
+      "2": 0,
+      "3": 0
+    },
+    "by_category": {
+      "单值聚合": {
+        "total": 3,
+        "passed": 3
+      },
+      "分组聚合": {
+        "total": 3,
+        "passed": 2
+      },
+      "筛选计算": {
+        "total": 3,
+        "passed": 2
+      },
+      "时间趋势": {
+        "total": 3,
+        "passed": 2
+      },
+      "口径陷阱": {
+        "total": 3,
+        "passed": 3
+      },
+      "数据质量": {
+        "total": 3,
+        "passed": 3
+      }
+    }
+  },
+  "questions": [
+    {
+      "id": "agg_01",
+      "category": "单值聚合",
+      "question": "所有订单的销售总额是多少（只要数字）？",
+      "ok": true,
+      "attempts": 1,
+      "latency_s": 13.52,
+      "kind": "ok",
+      "error": ""
+    },
+    {
+      "id": "agg_02",
+      "category": "单值聚合",
+      "question": "全部订单的平均单价是多少？",
+      "ok": true,
+      "attempts": 1,
+      "latency_s": 16.65,
+      "kind": "ok",
+      "error": ""
+    },
+    {
+      "id": "agg_03",
+      "category": "单值聚合",
+      "question": "数据里一共有多少条订单？",
+      "ok": true,
+      "attempts": 1,
+      "latency_s": 17.55,
+      "kind": "ok",
+      "error": ""
+    },
+    {
+      "id": "group_01",
+      "category": "分组聚合",
+      "question": "按地区统计销售总额，按销售额从高到低排序输出。",
+      "ok": true,
+      "attempts": 1,
+      "latency_s": 24.36,
+      "kind": "ok",
+      "error": ""
+    },
+    {
+      "id": "group_02",
+      "category": "分组聚合",
+      "question": "每个品类各有多少条订单？",
+      "ok": true,
+      "attempts": 1,
+      "latency_s": 23.58,
+      "kind": "ok",
+      "error": ""
+    },
+    {
+      "id": "group_03",
+      "category": "分组聚合",
+      "question": "销售额最高的销售员是谁？他总共卖了多少？",
+      "ok": false,
+      "attempts": 1,
+      "latency_s": 16.39,
+      "kind": "wrong_answer",
+      "error": "形状不一致：结果 (1, 1) vs 黄金 (1, 2)"
+    },
+    {
+      "id": "filter_01",
+      "category": "筛选计算",
+      "question": "华东地区的销售总额是多少？",
+      "ok": true,
+      "attempts": 1,
+      "latency_s": 11.21,
+      "kind": "ok",
+      "error": ""
+    },
+    {
+      "id": "filter_02",
+      "category": "筛选计算",
+      "question": "数码配件品类中，销量（数量的总和）最高的城市是哪个？销量是多少？",
+      "ok": false,
+      "attempts": 1,
+      "latency_s": 16.16,
+      "kind": "wrong_answer",
+      "error": "形状不一致：结果 (1, 1) vs 黄金 (1, 2)"
+    },
+    {
+      "id": "filter_03",
+      "category": "筛选计算",
+      "question": "折扣率大于 0.2 的订单，销售总额是多少？",
+      "ok": true,
+      "attempts": 1,
+      "latency_s": 23.47,
+      "kind": "ok",
+      "error": ""
+    },
+    {
+      "id": "time_01",
+      "category": "时间趋势",
+      "question": "按月份统计销售总额，月份用 年-月 文本表示（例如 2025-01），按月份从早到晚排序输出。",
+      "ok": true,
+      "attempts": 1,
+      "latency_s": 27.14,
+      "kind": "ok",
+      "error": ""
+    },
+    {
+      "id": "time_02",
+      "category": "时间趋势",
+      "question": "2025 年第一季度（1 到 3 月）的销售总额是多少？",
+      "ok": true,
+      "attempts": 1,
+      "latency_s": 14.18,
+      "kind": "ok",
+      "error": ""
+    },
+    {
+      "id": "time_03",
+      "category": "时间趋势",
+      "question": "单日销售额最高的那一天，总共卖了多少（金额）？",
+      "ok": false,
+      "attempts": 1,
+      "latency_s": 22.18,
+      "kind": "wrong_answer",
+      "error": "结果中未找到期望值 698362.5900（允许相对误差 1.00%）"
+    },
+    {
+      "id": "sem_01",
+      "category": "口径陷阱",
+      "question": "全部订单的平均折扣率是多少？（注意：折扣率是比率，不能用求和）",
+      "ok": true,
+      "attempts": 1,
+      "latency_s": 16.39,
+      "kind": "ok",
+      "error": ""
+    },
+    {
+      "id": "sem_02",
+      "category": "口径陷阱",
+      "question": "每个地区订单的平均单价分别是多少？",
+      "ok": true,
+      "attempts": 1,
+      "latency_s": 20.57,
+      "kind": "ok",
+      "error": ""
+    },
+    {
+      "id": "sem_03",
+      "category": "口径陷阱",
+      "question": "平均每笔订单的销售额是多少？",
+      "ok": true,
+      "attempts": 1,
+      "latency_s": 12.34,
+      "kind": "ok",
+      "error": ""
+    },
+    {
+      "id": "quality_01",
+      "category": "数据质量",
+      "question": "数据里完全重复的行一共有多少行？",
+      "ok": true,
+      "attempts": 1,
+      "latency_s": 17.84,
+      "kind": "ok",
+      "error": ""
+    },
+    {
+      "id": "quality_02",
+      "category": "数据质量",
+      "question": "数量这一列有多少个缺失值？",
+      "ok": true,
+      "attempts": 1,
+      "latency_s": 14.25,
+      "kind": "ok",
+      "error": ""
+    },
+    {
+      "id": "quality_03",
+      "category": "数据质量",
+      "question": "单笔销售额的最高值是多少？",
+      "ok": true,
+      "attempts": 1,
+      "latency_s": 16.07,
+      "kind": "ok",
+      "error": ""
+    }
+  ]
+}
