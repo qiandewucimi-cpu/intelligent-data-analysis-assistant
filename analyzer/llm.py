@@ -13,6 +13,39 @@ ProviderType = Literal["dashscope", "openai_compatible", "zhipu", "deepseek"]
 # LangChain adapter is needed).  One client construction path keeps the
 # dependency tree small and the failure modes uniform.
 
+# Shared defaults for every entry point (Streamlit sidebar, CLI, eval runner):
+# env var names plus a sensible model/base_url fallback per provider.
+PROVIDER_DEFAULTS: dict[str, dict[str, str]] = {
+    "zhipu": {
+        "key": "ZHIPU_API_KEY",
+        "model": "glm-4-flash",
+        "base_url": "https://open.bigmodel.cn/api/paas/v4",
+        "model_env": "ZHIPU_MODEL",
+        "base_env": "ZHIPU_BASE_URL",
+    },
+    "deepseek": {
+        "key": "DEEPSEEK_API_KEY",
+        "model": "deepseek-chat",
+        "base_url": "https://api.deepseek.com",
+        "model_env": "DEEPSEEK_MODEL",
+        "base_env": "DEEPSEEK_BASE_URL",
+    },
+    "dashscope": {
+        "key": "DASHSCOPE_API_KEY",
+        "model": "qwen-plus",
+        "base_url": "https://dashscope.aliyuncs.com/compatible-mode/v1",
+        "model_env": "QWEN_MODEL",
+        "base_env": "DASHSCOPE_BASE_URL",
+    },
+    "openai_compatible": {
+        "key": "OPENAI_API_KEY",
+        "model": "gpt-4o-mini",
+        "base_url": "",
+        "model_env": "OPENAI_MODEL",
+        "base_env": "OPENAI_BASE_URL",
+    },
+}
+
 
 @dataclass(frozen=True)
 class LLMConfig:

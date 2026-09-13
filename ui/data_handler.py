@@ -30,6 +30,7 @@ __all__ = [
     "list_excel_sheets",
     "load_dataframe",
     "looks_like_messy_header",
+    "default_cleaning_options",
 ]
 
 MissingNumericStrategy = Literal["median", "mean", "zero", "skip"]
@@ -529,3 +530,26 @@ def _should_skip_outlier_detection(column: str, series: pd.Series) -> bool:
         return True
 
     return False
+
+
+def default_cleaning_options() -> dict[str, Any]:
+    """Returns the default interactive cleaning configuration.
+
+    This is the product default shared by the Streamlit shell, the CLI and the
+    eval harness: base tidy-ups on, destructive actions (duplicates / missing /
+    outliers) off until the user asks for them.
+    """
+
+    return {
+        # 基础整理：推荐默认开启（基本不会动坏数据）
+        "strip_text": True,
+        "convert_datetime": True,
+        "convert_numeric_text": True,
+        # 按需处理：默认关闭，需用户主动选择
+        "remove_duplicates": False,
+        "fill_missing": False,
+        "mark_outliers": False,
+        "missing_numeric_strategy": "median",
+        "missing_text_strategy": "mode",
+        "missing_datetime_strategy": "ffill_bfill",
+    }

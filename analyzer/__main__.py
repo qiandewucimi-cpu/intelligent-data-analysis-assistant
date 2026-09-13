@@ -18,46 +18,14 @@ from tabulate import tabulate
 
 from analyzer.agent import PandasQueryAgent
 from analyzer.columns import drop_helper_columns
-from analyzer.llm import LLMConfig, LLMService, ProviderType
+from analyzer.llm import LLMConfig, LLMService, PROVIDER_DEFAULTS
 from analyzer.profile import build_dataframe_profile
-
-# 与 Streamlit 侧边栏一致的默认模型与接口地址。
-_PROVIDER_DEFAULTS: dict[str, dict[str, str]] = {
-    "zhipu": {
-        "key": "ZHIPU_API_KEY",
-        "model": "glm-4-flash",
-        "base_url": "https://open.bigmodel.cn/api/paas/v4",
-        "model_env": "ZHIPU_MODEL",
-        "base_env": "ZHIPU_BASE_URL",
-    },
-    "deepseek": {
-        "key": "DEEPSEEK_API_KEY",
-        "model": "deepseek-chat",
-        "base_url": "https://api.deepseek.com",
-        "model_env": "DEEPSEEK_MODEL",
-        "base_env": "DEEPSEEK_BASE_URL",
-    },
-    "dashscope": {
-        "key": "DASHSCOPE_API_KEY",
-        "model": "qwen-plus",
-        "base_url": "https://dashscope.aliyuncs.com/compatible-mode/v1",
-        "model_env": "QWEN_MODEL",
-        "base_env": "DASHSCOPE_BASE_URL",
-    },
-    "openai_compatible": {
-        "key": "OPENAI_API_KEY",
-        "model": "gpt-4o-mini",
-        "base_url": "",
-        "model_env": "OPENAI_MODEL",
-        "base_env": "OPENAI_BASE_URL",
-    },
-}
 
 
 def _load_config(args: argparse.Namespace) -> LLMConfig:
     """Resolves provider settings from .env / environment, mirroring the sidebar defaults."""
 
-    spec = _PROVIDER_DEFAULTS[args.provider]
+    spec = PROVIDER_DEFAULTS[args.provider]
     api_key = os.getenv(spec["key"], "").strip()
     model_name = (os.getenv(spec["model_env"], "") or spec["model"]).strip()
     base_url = (os.getenv(spec["base_env"], "") or spec["base_url"]).strip()
@@ -95,7 +63,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument(
         "--provider",
         default=os.getenv("LLM_PROVIDER", "zhipu").strip().lower(),
-        choices=list(_PROVIDER_DEFAULTS),
+        choices=list(PROVIDER_DEFAULTS),
         help="模型服务（默认取 .env 的 LLM_PROVIDER，否则 zhipu）",
     )
     parser.add_argument("--no-clean", action="store_true", help="跳过自动清洗，直接用原始数据提问")
@@ -112,9 +80,11 @@ def main(argv: list[str] | None = None) -> int:
         sys.exit(f"读取数据失败：{exc}")
 
     if not args.no_clean:
-        from ui.data_handler import CleaningOptions, clean_dataframe
+        # 与网页端一致：用产品默认清洗选项（只做基础整理，不动重复/缺失/异常值），
+        # 保证 CLI 与 Streamlit 两条入口对同一份数据给出相同语义。
+        from ui.data_handler import CleaningOptions, clean_dataframe, default_cleaning_options
 
-        df, _ = clean_dataframe(df, options=CleaningOptions())
+        df, _ = clean_dataframe(df, options=CleaningOptions(**default_cleaning_options()))
 
     df = drop_helper_columns(df)
     profile = build_dataframe_profile(df)

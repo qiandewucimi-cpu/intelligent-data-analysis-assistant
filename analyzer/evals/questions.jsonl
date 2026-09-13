@@ -1,0 +1,18 @@
+{"id": "agg_01", "category": "单值聚合", "question": "所有订单的销售总额是多少（只要数字）？", "reference": "result = df['销售额'].sum()", "check": {"type": "value_close", "rel_tol": 0.01}}
+{"id": "agg_02", "category": "单值聚合", "question": "全部订单的平均单价是多少？", "reference": "result = df['单价'].mean()", "check": {"type": "value_close", "rel_tol": 0.01}}
+{"id": "agg_03", "category": "单值聚合", "question": "数据里一共有多少条订单？", "reference": "result = len(df)", "check": {"type": "value_close", "rel_tol": 0.0}}
+{"id": "group_01", "category": "分组聚合", "question": "按地区统计销售总额，按销售额从高到低排序输出。", "reference": "result = df.groupby('地区', as_index=False)['销售额'].sum().sort_values('销售额', ascending=False)", "check": {"type": "frame_equal", "sorted_desc": true}}
+{"id": "group_02", "category": "分组聚合", "question": "每个品类各有多少条订单？", "reference": "result = df.groupby('品类', as_index=False)['订单编号'].count()", "check": {"type": "frame_equal", "sorted_desc": false}}
+{"id": "group_03", "category": "分组聚合", "question": "销售额最高的销售员是谁？他总共卖了多少？", "reference": "totals = df.groupby('销售员')['销售额'].sum()\nresult = pd.DataFrame({'销售员': [totals.idxmax()], '销售额': [totals.max()]})", "check": {"type": "frame_equal", "sorted_desc": false}}
+{"id": "filter_01", "category": "筛选计算", "question": "华东地区的销售总额是多少？", "reference": "result = df.loc[df['地区'] == '华东', '销售额'].sum()", "check": {"type": "value_close", "rel_tol": 0.01}}
+{"id": "filter_02", "category": "筛选计算", "question": "数码配件品类中，销量（数量的总和）最高的城市是哪个？销量是多少？", "reference": "part = df.loc[df['品类'] == '数码配件'].groupby('城市', as_index=False)['数量'].sum().sort_values('数量', ascending=False)\nresult = part.head(1)", "check": {"type": "frame_equal", "sorted_desc": false}}
+{"id": "filter_03", "category": "筛选计算", "question": "折扣率大于 0.2 的订单，销售总额是多少？", "reference": "result = df.loc[df['折扣率'] > 0.2, '销售额'].sum()", "check": {"type": "value_close", "rel_tol": 0.01}}
+{"id": "time_01", "category": "时间趋势", "question": "按月份统计销售总额，月份用 年-月 文本表示（例如 2025-01），按月份从早到晚排序输出。", "reference": "month = df['日期'].dt.strftime('%Y-%m')\nresult = df.groupby(month, as_index=False)['销售额'].sum().sort_values('日期', ascending=True)", "check": {"type": "frame_equal", "sorted_desc": false}}
+{"id": "time_02", "category": "时间趋势", "question": "2025 年第一季度（1 到 3 月）的销售总额是多少？", "reference": "result = df.loc[df['日期'].dt.month <= 3, '销售额'].sum()", "check": {"type": "value_close", "rel_tol": 0.01}}
+{"id": "time_03", "category": "时间趋势", "question": "单日销售额最高的那一天，总共卖了多少（金额）？", "reference": "daily = df.groupby('日期')['销售额'].sum()\nresult = daily.max()", "check": {"type": "value_close", "rel_tol": 0.01}}
+{"id": "sem_01", "category": "口径陷阱", "question": "全部订单的平均折扣率是多少？（注意：折扣率是比率，不能用求和）", "reference": "result = df['折扣率'].mean()", "check": {"type": "value_close", "rel_tol": 0.01}}
+{"id": "sem_02", "category": "口径陷阱", "question": "每个地区订单的平均单价分别是多少？", "reference": "result = df.groupby('地区', as_index=False)['单价'].mean()", "check": {"type": "frame_equal", "sorted_desc": false}}
+{"id": "sem_03", "category": "口径陷阱", "question": "平均每笔订单的销售额是多少？", "reference": "result = df['销售额'].mean()", "check": {"type": "value_close", "rel_tol": 0.01}}
+{"id": "quality_01", "category": "数据质量", "question": "数据里完全重复的行一共有多少行？", "reference": "result = int(df.duplicated().sum())", "check": {"type": "value_close", "rel_tol": 0.0}}
+{"id": "quality_02", "category": "数据质量", "question": "数量这一列有多少个缺失值？", "reference": "result = int(df['数量'].isna().sum())", "check": {"type": "value_close", "rel_tol": 0.0}}
+{"id": "quality_03", "category": "数据质量", "question": "单笔销售额的最高值是多少？", "reference": "result = df['销售额'].max()", "check": {"type": "value_close", "rel_tol": 0.01}}

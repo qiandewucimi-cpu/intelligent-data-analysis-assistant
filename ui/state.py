@@ -6,7 +6,11 @@ import streamlit as st
 
 from analyzer.columns import OUTLIER_FIELDS_COLUMN, OUTLIER_FLAG_COLUMN
 from ui.charts import build_chart_bundle
-from ui.data_handler import CleaningOptions, clean_dataframe
+from ui.data_handler import (  # noqa: F401 - default_cleaning_options re-exported
+    CleaningOptions,
+    clean_dataframe,
+    default_cleaning_options,
+)
 
 
 def init_session_state() -> None:
@@ -28,24 +32,6 @@ def init_session_state() -> None:
     for key, value in defaults.items():
         if key not in st.session_state:
             st.session_state[key] = value
-
-
-def default_cleaning_options() -> dict[str, Any]:
-    """Returns the default interactive cleaning configuration."""
-
-    return {
-        # 基础整理：推荐默认开启（基本不会动坏数据）
-        "strip_text": True,
-        "convert_datetime": True,
-        "convert_numeric_text": True,
-        # 按需处理：默认关闭，需用户主动选择
-        "remove_duplicates": False,
-        "fill_missing": False,
-        "mark_outliers": False,
-        "missing_numeric_strategy": "median",
-        "missing_text_strategy": "mode",
-        "missing_datetime_strategy": "ffill_bfill",
-    }
 
 
 def apply_cleaning() -> None:
