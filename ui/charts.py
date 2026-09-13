@@ -6,7 +6,7 @@ from typing import Any
 import pandas as pd
 import plotly.express as px
 
-from utils.data_handler import drop_helper_columns, is_identifier_column
+from analyzer.columns import drop_helper_columns, is_identifier_column
 
 
 # Columns whose name implies a rate/average/unit-price — summing these is wrong,

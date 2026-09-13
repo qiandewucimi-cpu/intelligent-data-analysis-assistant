@@ -341,9 +341,12 @@ def run_in_sandbox(
 
         child_env = os.environ.copy()
         child_env["PYTHONIOENCODING"] = "utf-8"
+        # Make ``-m analyzer.sandbox_worker`` resolvable regardless of the
+        # caller's working directory (the CLI may run from anywhere).
+        project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        child_env["PYTHONPATH"] = project_root + os.pathsep + child_env.get("PYTHONPATH", "")
         proc = subprocess.Popen(
-            [sys.executable, "-m", "utils.sandbox_worker"],
-            cwd=os.getcwd(),
+            [sys.executable, "-m", "analyzer.sandbox_worker"],
             stdin=subprocess.PIPE,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,

@@ -1,6 +1,6 @@
 """Sandbox child process: validate -> exec -> normalize -> JSON result.
 
-Runs as ``python -m utils.sandbox_worker``.  Reads one JSON request from
+Runs as ``python -m analyzer.sandbox_worker``.  Reads one JSON request from
 stdin::
 
     {"code": "...", "input_pkl": "<path>", "output_json": "<path>"}
@@ -24,7 +24,7 @@ import traceback
 import numpy as np
 import pandas as pd
 
-from utils.sandbox import SAFE_BUILTINS, validate_code_safety
+from analyzer.executor import SAFE_BUILTINS, validate_code_safety
 
 
 def _index_is_meaningful(index: pd.Index) -> bool:

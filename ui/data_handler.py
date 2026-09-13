@@ -1,71 +1,40 @@
+"""UI-shell data loading and the interactive cleaning pipeline.
+
+Pure engine concerns (prompt profiles, whole-table statistics, column
+semantics) live in :mod:`analyzer.profile` / :mod:`analyzer.columns`; this
+module keeps what the demo shell owns: reading files and cleaning them."""
+
 from __future__ import annotations
 
 from dataclasses import asdict, dataclass
 from io import BytesIO
-import re
 from typing import Any, Literal
 
 import numpy as np
 import pandas as pd
 
+from analyzer.columns import (
+    HELPER_COLUMNS,
+    OUTLIER_FIELDS_COLUMN,
+    OUTLIER_FLAG_COLUMN,
+    is_identifier_column,
+)
 
-OUTLIER_FLAG_COLUMN = "是否异常值"
-OUTLIER_FIELDS_COLUMN = "异常值字段"
-HELPER_COLUMNS = (OUTLIER_FLAG_COLUMN, OUTLIER_FIELDS_COLUMN)
+__all__ = [
+    "HELPER_COLUMNS",
+    "OUTLIER_FIELDS_COLUMN",
+    "OUTLIER_FLAG_COLUMN",
+    "CleaningOptions",
+    "CleaningReport",
+    "clean_dataframe",
+    "list_excel_sheets",
+    "load_dataframe",
+    "looks_like_messy_header",
+]
+
 MissingNumericStrategy = Literal["median", "mean", "zero", "skip"]
 MissingTextStrategy = Literal["mode", "unknown", "empty", "skip"]
 MissingDatetimeStrategy = Literal["ffill_bfill", "epoch", "skip"]
-
-IDENTIFIER_KEYWORDS = (
-    "id",
-    "jobid",
-    "userid",
-    "candidateid",
-    "resumeid",
-    "postid",
-    "reqid",
-    "uuid",
-    "guid",
-    "编号",
-    "编码",
-    "序号",
-    "卡号",
-    "账号",
-    "账户",
-    "订单号",
-    "流水号",
-    "工号",
-    "学号",
-    "身份证",
-    "手机号",
-    "手机",
-    "电话",
-    "phone",
-    "mobile",
-    "tel",
-    "zip",
-    "邮编",
-    "邮政编码",
-)
-
-
-def is_identifier_column(column: str) -> bool:
-    """Returns True when a column name looks like an identifier rather than a measure.
-
-    Identifier-like columns (ids, phone numbers, postal codes) must never be
-    converted to numbers, charted as values, or treated as anomalies.
-    """
-
-    normalized_name = re.sub(r"[^a-z0-9一-鿿]+", "", str(column).lower())
-    if not normalized_name:
-        return False
-    return any(keyword in normalized_name for keyword in IDENTIFIER_KEYWORDS)
-
-
-def drop_helper_columns(df: pd.DataFrame) -> pd.DataFrame:
-    """Returns a view without the cleaning helper columns used only for display."""
-
-    return df.drop(columns=[column for column in HELPER_COLUMNS if column in df.columns])
 
 
 @dataclass(frozen=True)
@@ -178,75 +147,6 @@ def looks_like_messy_header(df: pd.DataFrame) -> bool:
         return False
     unnamed = sum(1 for column in df.columns if str(column).startswith("Unnamed"))
     return unnamed / df.shape[1] >= 0.5
-
-
-def build_dataframe_profile(
-    df: pd.DataFrame, sample_rows: int = 5, desensitize: bool = False
-) -> dict[str, Any]:
-    """Builds a schema + sample + value-hint profile for LLM prompts.
-
-    The value hints (real category spellings, numeric ranges, date ranges) let
-    the model write code that matches the data instead of guessing column values.
-
-    When ``desensitize`` is True, real row samples and real categorical values
-    (which may contain names / client identities) are withheld; only column
-    names, types and numeric/date ranges are kept so nothing identifiable leaves
-    the machine.
-    """
-
-    source = drop_helper_columns(df)
-    numeric_columns = source.select_dtypes(include=["number"]).columns.tolist()
-    datetime_columns = source.select_dtypes(include=["datetime", "datetimetz"]).columns.tolist()
-    categorical_columns = [
-        column
-        for column in source.columns
-        if column not in set(numeric_columns + datetime_columns)
-    ]
-
-    column_value_hints: dict[str, Any] = {}
-    for column in categorical_columns:
-        series = source[column].dropna().astype(str).str.strip()
-        series = series[series != ""]
-        unique_values = series.unique().tolist()
-        column_value_hints[column] = {
-            "type": "类别",
-            "unique_count": int(len(unique_values)),
-            "examples": [] if desensitize else unique_values[:12],
-        }
-    for column in numeric_columns:
-        series = source[column].dropna()
-        if series.empty:
-            continue
-        column_value_hints[column] = {
-            "type": "数值",
-            "min": _to_native(series.min()),
-            "max": _to_native(series.max()),
-            "mean": _to_native(series.mean()),
-        }
-    for column in datetime_columns:
-        series = source[column].dropna()
-        if series.empty:
-            continue
-        column_value_hints[column] = {
-            "type": "日期",
-            "earliest": _to_native(series.min()),
-            "latest": _to_native(series.max()),
-        }
-
-    return {
-        "row_count": int(source.shape[0]),
-        "column_count": int(source.shape[1]),
-        "columns": source.columns.tolist(),
-        "dtypes": {column: str(dtype) for column, dtype in source.dtypes.items()},
-        "missing_values": {column: int(value) for column, value in source.isna().sum().items()},
-        "numeric_columns": numeric_columns,
-        "datetime_columns": datetime_columns,
-        "categorical_columns": categorical_columns,
-        "column_value_hints": column_value_hints,
-        "sample_rows": []
-        if desensitize
-        else source.head(sample_rows).replace({np.nan: None}).to_dict(orient="records"),
-    }
 
 
 def clean_dataframe(
@@ -629,138 +529,3 @@ def _should_skip_outlier_detection(column: str, series: pd.Series) -> bool:
         return True
 
     return False
-
-
-def _to_native(value: Any) -> Any:
-    """Casts numpy/pandas scalars to JSON-friendly Python values."""
-
-    if value is None:
-        return None
-    try:
-        if pd.isna(value):
-            return None
-    except (TypeError, ValueError):
-        pass
-    if isinstance(value, (np.integer,)):
-        return int(value)
-    if isinstance(value, (np.floating, float)):
-        return round(float(value), 4)
-    if isinstance(value, (np.bool_, bool)):
-        return bool(value)
-    if isinstance(value, (pd.Timestamp,)):
-        return value.isoformat()
-    return value
-
-
-def build_analysis_statistics(
-    df: pd.DataFrame, top_n: int = 8, desensitize: bool = False
-) -> dict[str, Any]:
-    """Computes real whole-table statistics used to ground AI answers and reports.
-
-    Unlike the lightweight profile (schema + a few sample rows), this looks at
-    every row so the model can reason about actual numbers instead of guessing.
-
-    When ``desensitize`` is True, the real names of categorical top values
-    (e.g. client / region names) are replaced by neutral labels like "取值1",
-    so the distribution (counts / proportions) is preserved but identities are
-    not sent to the model.
-    """
-
-    source = drop_helper_columns(df)
-    numeric_columns = [
-        column
-        for column in source.select_dtypes(include=["number"]).columns.tolist()
-        if not is_identifier_column(column)
-    ]
-    datetime_columns = source.select_dtypes(include=["datetime", "datetimetz"]).columns.tolist()
-    categorical_columns = [
-        column
-        for column in source.columns
-        if column not in set(numeric_columns + datetime_columns)
-    ]
-
-    numeric_stats: dict[str, Any] = {}
-    for column in numeric_columns:
-        series = source[column].dropna()
-        if series.empty:
-            continue
-        numeric_stats[column] = {
-            "count": int(series.shape[0]),
-            "missing": int(source[column].isna().sum()),
-            "min": _to_native(series.min()),
-            "max": _to_native(series.max()),
-            "mean": _to_native(series.mean()),
-            "median": _to_native(series.median()),
-            "std": _to_native(series.std()),
-            "sum": _to_native(series.sum()),
-        }
-
-    categorical_stats: dict[str, Any] = {}
-    for column in categorical_columns:
-        series = source[column].dropna().astype(str).str.strip()
-        series = series[series != ""]
-        if series.empty:
-            continue
-        counts = series.value_counts()
-        total = int(counts.sum())
-        top_values = [
-            {
-                "value": f"取值{rank}" if desensitize else str(value),
-                "count": int(count),
-                "pct": round(float(count) / float(total) * 100.0, 2) if total else 0.0,
-            }
-            for rank, (value, count) in enumerate(counts.head(top_n).items(), start=1)
-        ]
-        categorical_stats[column] = {
-            "unique": int(counts.shape[0]),
-            "missing": int(source[column].isna().sum()),
-            "top_values": top_values,
-        }
-
-    datetime_stats: dict[str, Any] = {}
-    for column in datetime_columns:
-        series = source[column].dropna()
-        if series.empty:
-            continue
-        try:
-            span_days = int((series.max() - series.min()).days)
-        except (TypeError, ValueError, AttributeError):
-            span_days = None
-        datetime_stats[column] = {
-            "earliest": _to_native(series.min()),
-            "latest": _to_native(series.max()),
-            "span_days": span_days,
-            "missing": int(source[column].isna().sum()),
-        }
-
-    correlations: list[dict[str, Any]] = []
-    measure_columns = [column for column in numeric_columns if source[column].nunique(dropna=True) > 1]
-    if len(measure_columns) >= 2:
-        corr_matrix = source[measure_columns].corr(numeric_only=True)
-        seen_pairs: set[frozenset[str]] = set()
-        for first in measure_columns:
-            for second in measure_columns:
-                if first == second:
-                    continue
-                pair = frozenset((first, second))
-                if pair in seen_pairs:
-                    continue
-                seen_pairs.add(pair)
-                value = corr_matrix.loc[first, second]
-                if pd.isna(value):
-                    continue
-                if abs(float(value)) >= 0.5:
-                    correlations.append(
-                        {"columns": [first, second], "correlation": round(float(value), 3)}
-                    )
-        correlations.sort(key=lambda item: abs(item["correlation"]), reverse=True)
-        correlations = correlations[:10]
-
-    return {
-        "row_count": int(source.shape[0]),
-        "column_count": int(source.shape[1]),
-        "numeric_stats": numeric_stats,
-        "categorical_stats": categorical_stats,
-        "datetime_stats": datetime_stats,
-        "correlations": correlations,
-    }

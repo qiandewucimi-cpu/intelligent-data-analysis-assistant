@@ -4,8 +4,8 @@ import unittest
 
 import pandas as pd
 
-from utils.sandbox import run_in_sandbox, validate_code_safety
-from utils.sandbox_worker import _normalize_result
+from analyzer.executor import run_in_sandbox, validate_code_safety
+from analyzer.sandbox_worker import _normalize_result
 
 
 def _sample_frame() -> pd.DataFrame:

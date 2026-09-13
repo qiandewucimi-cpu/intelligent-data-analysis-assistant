@@ -5,8 +5,8 @@ from typing import Any
 
 import pandas as pd
 
-from utils.llm_service import LLMService
-from utils.sandbox import run_in_sandbox, validate_code_safety
+from analyzer.executor import run_in_sandbox, validate_code_safety
+from analyzer.llm import LLMService
 
 
 @dataclass

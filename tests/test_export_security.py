@@ -4,7 +4,7 @@ import unittest
 
 import pandas as pd
 
-from utils.export_security import escape_spreadsheet_formulas
+from ui.export_security import escape_spreadsheet_formulas
 
 
 class ExportSecurityTests(unittest.TestCase):

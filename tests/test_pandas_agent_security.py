@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import unittest
 
-from utils.pandas_agent import PandasQueryAgent
+from analyzer.agent import PandasQueryAgent
 
 
 class PandasAgentSecurityTests(unittest.TestCase):
