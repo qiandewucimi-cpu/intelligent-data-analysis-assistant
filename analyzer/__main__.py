@@ -96,7 +96,15 @@ def main(argv: list[str] | None = None) -> int:
     except Exception as exc:
         sys.exit(f"查询失败：{exc}")
 
-    print(tabulate(result.result_frame.head(30), headers="keys", tablefmt="github", showindex=False))
+    print(
+        tabulate(
+            result.result_frame.head(30),
+            headers="keys",
+            tablefmt="github",
+            showindex=False,
+            floatfmt=",.2f",
+        )
+    )
     if len(result.result_frame) > 30:
         print(f"...（共 {len(result.result_frame)} 行，仅显示前 30 行）")
 

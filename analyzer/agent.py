@@ -141,7 +141,17 @@ class PandasQueryAgent:
             for column in text_columns:
                 preview[column] = "***"
 
+        # 大数值的默认科学计数法（2.61431e+07）会被解读模型读错数量级，
+        # 预览里的浮点数一律转成带千分位的普通文本。
+        preview = preview.copy()
+        for column in preview.select_dtypes(include=["float"]).columns:
+            preview[column] = preview[column].map(
+                lambda value: "" if pd.isna(value) else f"{value:,.4f}".rstrip("0").rstrip(".")
+            )
+
         try:
-            return preview.to_markdown(index=False)
+            # disable_numparse：to_markdown 底层的 tabulate 会把形似数字的字符串
+            # 重新解析成浮点再按默认格式输出，上面的千分位格式会被还原成科学计数法。
+            return preview.to_markdown(index=False, disable_numparse=True)
         except Exception:
             return preview.to_string(index=False)
