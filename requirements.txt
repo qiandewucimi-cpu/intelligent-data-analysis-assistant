@@ -1,13 +1,31 @@
+# 智能数据分析助手 v1.0.0
+# 核心引擎 + UI演示壳，无冗余依赖
+
+# 核心数据处理
+pandas>=2.2.0
+numpy>=1.26.0
+openpyxl>=3.1.0
+xlrd>=2.0.0
+
+# 可视化
+plotly>=5.20.0
+kaleido>=0.2.1  # PNG导出唯一依赖
+
+# Web界面
 streamlit>=1.36.0
 altair>=5.0.0
-pandas>=2.2.2
-numpy>=1.26.4
-openpyxl>=3.1.5
-xlrd>=2.0.1
-plotly>=5.22.0
-kaleido>=1.0.0
-python-dotenv>=1.0.1
+
+# LLM服务
+openai>=1.30.0
+python-dotenv>=1.0.0
+
+# 沙箱安全
 psutil>=5.9.0
-openai>=1.40.0
+
+# 输出格式
 tabulate>=0.9.0
+
+# 文档导出
 python-docx>=1.1.0
+
+# 系统要求：Python 3.9+
