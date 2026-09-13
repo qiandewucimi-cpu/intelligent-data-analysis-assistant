@@ -12,7 +12,7 @@ plotly>=5.20.0
 kaleido>=0.2.1  # PNG导出唯一依赖
 
 # Web界面
-streamlit>=1.36.0
+streamlit>=1.63.0
 altair>=5.0.0
 
 # LLM服务
