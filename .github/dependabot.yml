@@ -19,6 +19,8 @@ updates:
         versions: [">=6"]
       - dependency-name: psutil
         versions: [">=6"]
+      - dependency-name: openai
+        versions: [">=2"]
       - dependency-name: streamlit
         versions: [">=1.37"]
   - package-ecosystem: github-actions
