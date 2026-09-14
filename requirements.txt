@@ -20,7 +20,7 @@ openai>=1.30.0
 python-dotenv>=1.0.0
 
 # 沙箱安全
-psutil>=5.9.0
+psutil>=7.2.2
 
 # 输出格式
 tabulate>=0.10.0
