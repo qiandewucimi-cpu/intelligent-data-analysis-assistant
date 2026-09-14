@@ -5,14 +5,18 @@ updates:
     schedule:
       interval: monthly
     open-pull-requests-limit: 5
-    # 大版本升级需专项回归（pandas 3 行为变化 / kaleido 1 重写 / numpy 2.5+），先忽略
+    # 以下升级需专项回归后再手动跟进（major 行为变化 / 重写 / 与 pandas 2.x 的组合）
     ignore:
       - dependency-name: pandas
         versions: [">=3"]
       - dependency-name: kaleido
         versions: [">=1"]
       - dependency-name: numpy
-        versions: [">=2.5"]
+        versions: [">=2"]
+      - dependency-name: plotly
+        versions: [">=6"]
+      - dependency-name: streamlit
+        versions: [">=1.37"]
   - package-ecosystem: github-actions
     directory: /
     schedule:
