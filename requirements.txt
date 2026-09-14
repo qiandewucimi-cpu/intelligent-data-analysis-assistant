@@ -16,7 +16,7 @@ streamlit>=1.36.0
 altair>=5.5.0
 
 # LLM服务
-openai>=1.30.0
+openai>=3.13.0
 python-dotenv>=1.2.3
 
 # 沙箱安全
