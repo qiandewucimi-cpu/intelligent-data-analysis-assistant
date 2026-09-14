@@ -13,7 +13,7 @@ kaleido>=0.2.1.post1  # PNG导出唯一依赖
 
 # Web界面
 streamlit>=1.36.0
-altair>=5.0.0
+altair>=5.5.0
 
 # LLM服务
 openai>=1.30.0
