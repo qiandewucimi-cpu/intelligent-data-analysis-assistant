@@ -92,7 +92,7 @@ python -m analyzer.evals.run_eval                  # 真实评测，产出 resul
 
 ## 依赖取舍
 
-12 个直接依赖（从 15 降下来）：移除 LangChain 全家桶与 dashscope SDK——它们只有一条
+13 个直接依赖（从 15 降下来）：移除 LangChain 全家桶与 dashscope SDK——它们只有一条
 分支在用，而所有 provider 本就兼容 OpenAI 端点；保留 kaleido（PNG 导出唯一依赖）。
 部署脚本的依赖哨兵记录 requirements.txt 哈希，清单变更自动重装。
 
