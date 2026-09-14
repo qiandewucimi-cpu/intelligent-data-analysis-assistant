@@ -17,7 +17,7 @@ altair>=5.0.0
 
 # LLM服务
 openai>=1.30.0
-python-dotenv>=1.0.0
+python-dotenv>=1.2.3
 
 # 沙箱安全
 psutil>=5.9.0
