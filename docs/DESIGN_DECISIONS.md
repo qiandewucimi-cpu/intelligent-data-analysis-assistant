@@ -86,8 +86,8 @@ LangChain 全家桶（4 包 + dashscope SDK 共 6 包）只有 dashscope 一条�
 DashScope 本身提供 OpenAI 兼容端点——整套依赖换来的能力是零。代码里还有四层
 try/except TypeError 降级补丁，意味着三条未测试的失败路径。
 
-决策：四家 provider 统一走 OpenAI SDK + 各自 base_url，一个客户端构造路径。依赖
-15 → 12，`llm_service` 324 → 200 行。**保留了 kaleido**（PNG 图表导出唯一依赖）——
+决策：四家 provider 统一走 OpenAI SDK + 各自 base_url，一个客户端构造路径。直接依赖
+15 → 13（requirements.txt 现存 13 项），`llm_service` 324 → 284 行。**保留了 kaleido**（PNG 图表导出唯一依赖）——
 砍掉会让现有功能静默降级，依赖瘦身不等于无脑砍。
 
 另修一个部署真 bug：`.deps_ok` 空文件哨兵导致 requirements 变更后不重装依赖，

@@ -24,7 +24,7 @@
 > - **数据不出域**：脱敏模式只外发列名与聚合统计；导出侧转义公式注入（OWASP CSV
 >   Injection）；密钥仅存本机 .env。
 > - **引擎/界面分离**：同一引擎支持 Streamlit 与 `python -m analyzer` CLI 双入口；
->   移除 LangChain 全家桶，直接依赖 15→12。
+>   移除 LangChain 全家桶，直接依赖 15→13。
 
 ## 使用注意
 
