@@ -8,7 +8,7 @@ openpyxl>=3.1.0
 xlrd>=2.0.0
 
 # 可视化
-plotly>=5.20.0
+plotly>=7.0.0
 kaleido>=0.2.1  # PNG导出唯一依赖
 
 # Web界面
