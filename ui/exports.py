@@ -1,12 +1,14 @@
 from __future__ import annotations
 
 import io
+import os
+from typing import Any
 
 import pandas as pd
 import streamlit as st
 
 from ui.display import prepare_dataframe_for_display
-from ui.export_security import escape_spreadsheet_formulas
+from ui.export_security import escape_spreadsheet_formulas, prepare_cleaned_export_dataframe
 
 
 def render_dataframe_export(df: pd.DataFrame, base_name: str, key_prefix: str, sheet_name: str = "数据") -> None:
@@ -48,10 +50,7 @@ def render_dataframe_export(df: pd.DataFrame, base_name: str, key_prefix: str, s
 def render_cleaned_data_export(cleaned_df: pd.DataFrame) -> None:
     """Offers Excel/CSV download buttons for the cleaned data."""
 
-    # Keep the outlier marker columns only when there are actual outliers; otherwise drop the noise.
-    export_source = cleaned_df
-    if OUTLIER_FLAG_COLUMN in cleaned_df.columns and not bool(cleaned_df[OUTLIER_FLAG_COLUMN].any()):
-        export_source = drop_helper_columns(cleaned_df)
+    export_source = prepare_cleaned_export_dataframe(cleaned_df)
 
     base_name = "清洗后数据"
     file_label = st.session_state.get("file_name", "")

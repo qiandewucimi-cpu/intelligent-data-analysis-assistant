@@ -37,7 +37,8 @@ python -m analyzer.evals.run_eval                  # 真实评测，产出 resul
 ```
 
 复制 `.env.example` 为 `.env` 填入模型密钥（支持智谱 GLM / DeepSeek / 通义千问 /
-任意 OpenAI 兼容网关）。双击 `一键部署.bat` 可在全新 Windows 机器上自动装环境。
+任意 OpenAI 兼容网关）。全新 Windows 机器首次使用时双击 `一键部署.bat` 安装环境；
+环境就绪后日常使用双击 `启动应用.bat`，不会重复安装或更新依赖。
 
 ## 沙箱设计
 

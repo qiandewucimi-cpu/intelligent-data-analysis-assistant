@@ -123,7 +123,10 @@ $flag = Join-Path $here '.venv\.deps_ok'
 $reqPath = Join-Path $here 'requirements.txt'
 $reqHash = (Get-FileHash $reqPath -Algorithm SHA256).Hash
 $installedHash = $null
-if (Test-Path $flag) { $installedHash = (Get-Content $flag -Raw -ErrorAction SilentlyContinue).Trim() }
+if (Test-Path $flag) {
+    $installedHashContent = Get-Content $flag -Raw -ErrorAction SilentlyContinue
+    if ($null -ne $installedHashContent) { $installedHash = $installedHashContent.Trim() }
+}
 if ($installedHash -ne $reqHash) {
     if ($installedHash) {
         Say "[3/4] 依赖清单有更新，正在同步安装（几分钟，别关窗口）..." 'Yellow'
@@ -159,14 +162,16 @@ try {
     $lnkPath = Join-Path $desktop '启动-智能数据分析助手.lnk'
     $ws = New-Object -ComObject WScript.Shell
     $shortcut = $ws.CreateShortcut($lnkPath)
-    $shortcut.TargetPath = (Join-Path $here '一键部署.bat')
+    $launcher = Join-Path $here '启动应用.bat'
+    $shortcut.TargetPath = $env:ComSpec
+    $shortcut.Arguments = "/k call `"$launcher`""
     $shortcut.WorkingDirectory = $here
     $shortcut.WindowStyle = 1
-    $shortcut.Description = '智能数据分析助手 · 一键启动'
+    $shortcut.Description = '智能数据分析助手 · 日常启动'
     $shortcut.Save()
     Say "已在桌面创建快捷方式：启动-智能数据分析助手（以后直接双击它就行）" 'Green'
 } catch {
-    Say "（桌面快捷方式没创建成功，没关系：以后从本文件夹双击『一键部署.bat』也能启动）" 'Yellow'
+    Say "（桌面快捷方式没创建成功，没关系：以后从本文件夹双击『启动应用.bat』即可）" 'Yellow'
 }
 
 Say ""
