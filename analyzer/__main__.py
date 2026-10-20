@@ -67,6 +67,7 @@ def main(argv: list[str] | None = None) -> int:
         help="模型服务（默认取 .env 的 LLM_PROVIDER，否则 zhipu）",
     )
     parser.add_argument("--no-clean", action="store_true", help="跳过自动清洗，直接用原始数据提问")
+    parser.add_argument("--no-desensitize", action="store_true", help="显式允许向模型发送样本与类别值；默认隐藏这些内容")
     parser.add_argument("--show-code", action="store_true", help="打印生成的 pandas 代码")
     parser.add_argument("--timeout", type=float, default=None, help="沙箱超时秒数（默认 20）")
     args = parser.parse_args(argv)
@@ -87,12 +88,13 @@ def main(argv: list[str] | None = None) -> int:
         df, _ = clean_dataframe(df, options=CleaningOptions(**default_cleaning_options()))
 
     df = drop_helper_columns(df)
-    profile = build_dataframe_profile(df)
+    desensitize = not args.no_desensitize
+    profile = build_dataframe_profile(df, desensitize=desensitize)
     print(f"数据：{df.shape[0]} 行 × {df.shape[1]} 列 | 模型：{config.provider}/{config.model_name}\n")
 
     agent = PandasQueryAgent(llm_service=LLMService(config), max_retries=2, timeout_s=args.timeout)
     try:
-        result = agent.ask(question=args.question, df=df, dataframe_profile=profile)
+        result = agent.ask(question=args.question, df=df, dataframe_profile=profile, desensitize=desensitize)
     except Exception as exc:
         sys.exit(f"查询失败：{exc}")
 
