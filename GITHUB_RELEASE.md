@@ -1,9 +1,10 @@
+> 历史发布稿：此文件保留早期发布说明；当前安装、模型成绩日期和数据外发边界以[根README](README.md)为准。
+
 # 🚀 智能数据分析助手 v1.0.0
 
 > 本地LLM代码执行沙箱引擎，智能数据分析助手
 
 ![Python](https://img.shields.io/badge/Python-3.9%2B-blue)
-![License](https://img.shields.io/badge/License-MIT-green)
 ![Version](https://img.shields.io/badge/Version-1.0.0-red)
 
 ## 📋 简介
@@ -177,7 +178,7 @@ python -m streamlit run app.py --server.headless true
 
 ## 📄 许可证
 
-本项目采用 MIT 许可证 - 查看 [LICENSE](LICENSE) 文件了解详情。
+本仓库尚未提供独立 LICENSE 文件；本发布稿不再宣称已经采用 MIT，具体授权范围待作者明确。
 
 ## 📞 支持
 
